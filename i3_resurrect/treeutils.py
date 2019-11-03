@@ -7,8 +7,26 @@ import sys
 from . import config
 from . import util
 
+# The workspaces attributes to save
+WORKSPACE_ATTRIBUTES = [
+    'border',
+    'current_border_width',
+    'fullscreen_mode',
+    'layout',
+    'marks',
+    'name',
+    'num',
+    'output',
+    'orientation',
+    'percent',
+    'scratchpad_state',
+    'sticky',
+    'type',
+    'workspace_layout',
+]
+
 # The tree node attributes that we want to save.
-REQUIRED_ATTRIBUTES = [
+NODES_ATTRIBUTES = [
     'border',
     'current_border_width',
     'floating',
@@ -26,6 +44,30 @@ REQUIRED_ATTRIBUTES = [
 ]
 
 
+def build_workspace(tree, swallow):
+    """
+    Builds a restorable layout tree with basic Python data structures which are
+    JSON serialisable.
+    """
+    master = {}
+
+    # Base case.
+    if tree is None or tree == {}:
+        return master
+
+    set_attributs(tree, master, WORKSPACE_ATTRIBUTES)
+
+    # Recurse over child nodes (normal and floating).
+    for node_type in ['nodes', 'floating_nodes']:
+        if node_type in tree and tree[node_type] != []:
+            master[node_type] = []
+            for child in tree[node_type]:
+                # Step case.
+                master[node_type].append(process_node(child, swallow))
+
+    return master
+
+
 def process_node(original, swallow):
     """
     Recursive function which traverses a layout tree and builds a new tree from
@@ -38,10 +80,7 @@ def process_node(original, swallow):
     if original is None or original == {}:
         return processed
 
-    # Set attributes.
-    for attribute in REQUIRED_ATTRIBUTES:
-        if attribute in original:
-            processed[attribute] = original[attribute]
+    set_attributs(original, processed, NODES_ATTRIBUTES)
 
     # Keep rect attribute for floating nodes.
     if 'type' in original and original['type'] == 'floating_con':
@@ -67,15 +106,17 @@ def process_node(original, swallow):
                 value = f'^{escaped}$'
                 processed['swallows'][0][criterion] = value
 
-    # Recurse over child nodes (normal and floating).
-    for node_type in ['nodes', 'floating_nodes']:
-        if node_type in original and original[node_type] != []:
-            processed[node_type] = []
-            for child in original[node_type]:
-                # Step case.
-                processed[node_type].append(process_node(child, swallow))
-
     return processed
+
+
+def set_attributs(original, processed, attributes):
+    '''
+    Set attributes of a processed.
+    '''
+    # Set attributes.
+    for attribute in attributes:
+        if attribute in original:
+            processed[attribute] = original[attribute]
 
 
 def get_workspace_tree(workspace, numeric):

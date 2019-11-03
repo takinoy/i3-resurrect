@@ -21,7 +21,7 @@ def save(workspace_tree, layout_file, swallow_criteria):
         # file.
         f.write(
             json.dumps(
-                build_layout(workspace_tree, swallow_criteria),
+                treeutils.build_workspace(workspace_tree, swallow_criteria),
                 indent=2,
             )
         )
@@ -113,15 +113,6 @@ def restore(workspace_tree, layout):
         # user to lose their windows no matter what.
         for window_id in window_ids:
             xdo_map_window(window_id)
-
-
-def build_layout(tree, swallow):
-    """
-    Builds a restorable layout tree with basic Python data structures which are
-    JSON serialisable.
-    """
-    processed = treeutils.process_node(tree, swallow)
-    return processed
 
 
 def is_placeholder(container):

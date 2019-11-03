@@ -157,6 +157,8 @@ def restore_workspace(workspace, numeric, directory, profile, target):
 @click.argument('item',
                 type=click.Choice(['workspaces', 'profiles']),
                 default='workspaces')
+
+
 def list_workspaces(directory, item):
     """
     List saved workspaces or profiles.
