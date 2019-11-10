@@ -8,6 +8,7 @@ from natsort import natsorted
 from . import layout
 from . import programs
 from . import util
+from . import treeutils
 
 
 @click.group(context_settings=dict(help_option_names=['-h', '--help'],
@@ -50,6 +51,8 @@ def save_workspace(workspace, numeric, directory, profile, swallow, target):
         i3 = i3ipc.Connection()
         workspace = i3.get_tree().find_focused().workspace().name
 
+    workspace_tree = treeutils.get_workspace_tree(workspace, numeric)
+
     if profile is not None:
         directory = Path(directory) / 'profiles'
 
@@ -59,11 +62,19 @@ def save_workspace(workspace, numeric, directory, profile, swallow, target):
     if target != 'programs_only':
         # Save workspace layout to file.
         swallow_criteria = swallow.split(',')
-        layout.save(workspace, numeric, directory, profile, swallow_criteria)
+        layout_filename = f'workspace_{workspace}_layout.json'
+        if profile is not None:
+            layout_filename = f'{profile}_layout.json'
+        layout_file = Path(directory) / layout_filename
+        layout.save(workspace_tree, layout_file, swallow_criteria)
 
     if target != 'layout_only':
         # Save running programs to file.
-        programs.save(workspace, numeric, directory, profile)
+        programs_filename = f'workspace_{workspace}_programs.json'
+        if profile is not None:
+            programs_filename = f'{profile}_programs.json'
+        programs_file = Path(directory) / programs_filename
+        programs.save(workspace_tree, programs_file)
 
 
 @main.command('restore')
@@ -112,11 +123,20 @@ def restore_workspace(workspace, numeric, directory, profile, target):
 
     if target != 'programs_only':
         # Load workspace layout.
-        layout.restore(workspace, numeric, directory, profile)
+        workspace_tree = treeutils.get_workspace_tree(workspace, numeric)
+        layout_filename = f'workspace_{workspace}_layout.json'
+        if profile is not None:
+            layout_filename = f'{profile}_layout.json'
+        layout_file = Path(directory) / layout_filename
+        layout.restore(workspace_tree, layout_file)
 
     if target != 'layout_only':
         # Restore programs.
-        programs.restore(workspace, directory, profile)
+        programs_filename = f'workspace_{workspace}_programs.json'
+        if profile is not None:
+            programs_filename = f'{profile}_programs.json'
+        programs_file = Path(directory) / programs_filename
+        programs.restore(programs_file)
 
 
 @main.command('ls')

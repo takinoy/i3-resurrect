@@ -12,16 +12,11 @@ from . import treeutils
 from . import util
 
 
-def save(workspace, numeric, directory, profile):
+def save(workspace_tree, programs_file):
     """
     Save the commands to launch the programs open in the specified workspace
     to a file.
     """
-    filename = f'workspace_{workspace}_programs.json'
-    if profile is not None:
-        filename = f'{profile}_programs.json'
-    programs_file = Path(directory) / filename
-
     terminals = config.get('terminals', [])
 
     # Print deprecation warning if using old dictionary method of writing
@@ -36,7 +31,7 @@ def save(workspace, numeric, directory, profile):
     # Loop through windows and save commands to launch programs on saved
     # workspace.
     programs = []
-    for (con, pid) in windows_in_workspace(workspace, numeric):
+    for (con, pid) in windows_in_workspace(workspace_tree):
         if pid == 0:
             continue
 
@@ -76,26 +71,16 @@ def save(workspace, numeric, directory, profile):
         f.write(json.dumps(programs, indent=2))
 
 
-def restore(workspace, directory, profile):
+def restore(programs_file):
     """
     Restore the running programs from an i3 workspace.
     """
-    filename = f'workspace_{workspace}_programs.json'
-    if profile is not None:
-        filename = f'{profile}_programs.json'
-    programs_file = Path(directory) / filename
-
     # Read saved programs file.
     programs = None
     try:
         programs = json.loads(programs_file.read_text())
     except FileNotFoundError:
-        if profile is not None:
-            util.eprint('Could not find saved programs for profile '
-                        f'"{profile}"')
-        else:
-            util.eprint('Could not find saved programs for workspace '
-                        f'"{workspace}"')
+        util.eprint('Could not find ' f'"{programs_file}"')
         sys.exit(1)
 
     for entry in programs:
@@ -122,15 +107,14 @@ def restore(workspace, directory, profile):
         i3.command(f'exec cd "{working_directory}" && {command}')
 
 
-def windows_in_workspace(workspace, numeric):
+def windows_in_workspace(workspace_tree):
     """
     Generator to iterate over windows in a workspace.
 
     Args:
         workspace: The name of the workspace whose windows to iterate over.
     """
-    ws = treeutils.get_workspace_tree(workspace, numeric)
-    for con in treeutils.get_leaves(ws):
+    for con in treeutils.get_leaves(workspace_tree):
         pid = get_window_pid(con)
         yield (con, pid)
 
