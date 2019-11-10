@@ -27,24 +27,23 @@ def save(workspace_tree, layout_file, swallow_criteria):
         )
 
 
-def restore(workspace_tree, layout_file):
+def read(layout_file):
     """
-    Restore an i3 workspace layout.
+    Read saved layout file.
     """
-    # Read saved layout file.
     layout = None
     try:
         layout = json.loads(layout_file.read_text())
-        if layout == {}:
-            return
     except FileNotFoundError:
-        if profile is not None:
-            util.eprint(f'Could not find saved layout for profile "{profile}"')
-        else:
-            util.eprint('Could not find saved layout for workspace '
-                        f'"{workspace}"')
+        util.eprint('Could not find ' f'"{layout_file}"')
         sys.exit(1)
+    return layout
 
+
+def restore(workspace_tree, layout):
+    """
+    Restore an i3 workspace layout.
+    """
     window_ids = []
     placeholder_window_ids = []
 

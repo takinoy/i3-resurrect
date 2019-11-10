@@ -2,8 +2,10 @@ import json
 import re
 import shlex
 import subprocess
+import sys
 
 from . import config
+from . import util
 
 # The tree node attributes that we want to save.
 REQUIRED_ATTRIBUTES = [
@@ -90,10 +92,12 @@ def get_workspace_tree(workspace, numeric):
             for ws in container['nodes']:
                 # Select workspace and trigger name and num field
                 if numeric:
-                    if (workspace.isdigit()
-                            and 'num' in ws
-                            and ws['num'] == int(workspace)):
-                        return ws
+                    if workspace.isdigit():
+                        if 'num' in ws and ws['num'] == int(workspace):
+                            return ws
+                    else:
+                        util.eprint('Invalid workspace number.')
+                        sys.exit(1)
                 elif ws['name'] == workspace:
                     return ws
     return {}
