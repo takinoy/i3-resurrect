@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 
 import click
@@ -49,8 +48,10 @@ def save_workspace(workspace, numeric, directory, profile, swallow, target):
     """
     if workspace is None:
         i3 = i3ipc.Connection()
+        # set default value
         workspace = i3.get_tree().find_focused().workspace().name
 
+    # get the workspace tree
     workspace_tree = treeutils.get_workspace_tree(workspace, numeric)
 
     if profile is not None:
@@ -109,26 +110,27 @@ def restore_workspace(workspace, numeric, directory, profile, target):
     if profile is not None:
         directory = Path(directory) / 'profiles'
 
-    # Switch to the workspace which we are loading.
-    if numeric:
-        if workspace.isdigit():
-            i3.command(
-                f'workspace --no-auto-back-and-forth number {workspace}'
-            )
-        else:
-            util.eprint('Invalid workspace number.')
-            sys.exit(1)
+    workspace_tree = treeutils.get_workspace_tree(workspace, numeric)
+
+    layout_filename = f'workspace_{workspace}_layout.json'
+    if profile is not None:
+        layout_filename = f'{profile}_layout.json'
+    layout_file = Path(directory) / layout_filename
+
+    # Get layout name from file
+    workspace_layout = layout.read(layout_file)
+    if 'name' in workspace_layout:
+        workspace_name = workspace_layout["name"]
     else:
-        i3.command(f'workspace --no-auto-back-and-forth {workspace}')
+        workspace_name = workspace
+
+    # Switch to the workspace which we are loading.
+    i3.command(f'workspace --no-auto-back-and-forth {workspace_name}')
 
     if target != 'programs_only':
         # Load workspace layout.
-        workspace_tree = treeutils.get_workspace_tree(workspace, numeric)
-        layout_filename = f'workspace_{workspace}_layout.json'
-        if profile is not None:
-            layout_filename = f'{profile}_layout.json'
-        layout_file = Path(directory) / layout_filename
-        layout.restore(workspace_tree, layout_file)
+        if workspace_layout != {}:
+            layout.restore(workspace_tree, workspace_layout)
 
     if target != 'layout_only':
         # Restore programs.
