@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import click
@@ -60,10 +61,13 @@ def save_workspace(workspace, numeric, directory, profile, swallow, target):
     # Create directory if non-existent.
     Path(directory).mkdir(parents=True, exist_ok=True)
 
+    # Filter title string for saving in filename
+    id = util.filename_filter(workspace)
+
     if target != 'programs_only':
         # Save workspace layout to file.
         swallow_criteria = swallow.split(',')
-        layout_filename = f'workspace_{workspace}_layout.json'
+        layout_filename = f'workspace_{id}_layout.json'
         if profile is not None:
             layout_filename = f'{profile}_layout.json'
         layout_file = Path(directory) / layout_filename
@@ -71,7 +75,7 @@ def save_workspace(workspace, numeric, directory, profile, swallow, target):
 
     if target != 'layout_only':
         # Save running programs to file.
-        programs_filename = f'workspace_{workspace}_programs.json'
+        programs_filename = f'workspace_{id}_programs.json'
         if profile is not None:
             programs_filename = f'{profile}_programs.json'
         programs_file = Path(directory) / programs_filename
@@ -112,7 +116,10 @@ def restore_workspace(workspace, numeric, directory, profile, target):
 
     workspace_tree = treeutils.get_workspace_tree(workspace, numeric)
 
-    layout_filename = f'workspace_{workspace}_layout.json'
+    # Filter title string for saving in filename
+    id = util.filename_filter(workspace)
+
+    layout_filename = f'workspace_{id}_layout.json'
     if profile is not None:
         layout_filename = f'{profile}_layout.json'
     layout_file = Path(directory) / layout_filename
@@ -134,7 +141,7 @@ def restore_workspace(workspace, numeric, directory, profile, target):
 
     if target != 'layout_only':
         # Restore programs.
-        programs_filename = f'workspace_{workspace}_programs.json'
+        programs_filename = f'workspace_{id}_programs.json'
         if profile is not None:
             programs_filename = f'{profile}_programs.json'
         programs_file = Path(directory) / programs_filename
@@ -205,13 +212,16 @@ def remove(workspace, directory, profile, target):
     """
     Remove saved layout or programs.
     """
+    # Filter title string for saving in filename
+    id = util.filename_filter(workspace)
+
     if profile is not None:
         directory = Path(directory) / 'profiles'
         programs_filename = f'{profile}_programs.json'
         layout_filename = f'{profile}_layout.json'
     elif workspace is not None:
-        programs_filename = f'workspace_{workspace}_programs.json'
-        layout_filename = f'workspace_{workspace}_layout.json'
+        programs_filename = f'workspace_{id}_programs.json'
+        layout_filename = f'workspace_{id}_layout.json'
     else:
         util.eprint('Either --profile or --workspace must be specified.')
         sys.exit(1)

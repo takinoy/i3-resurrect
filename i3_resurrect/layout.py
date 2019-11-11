@@ -28,7 +28,9 @@ def save(workspace_tree, layout_file, swallow_criteria):
 
 
 def read(layout_file):
-    # Read saved layout file.
+    """
+    Read saved layout file.
+    """
     layout = None
     try:
         layout = json.loads(layout_file.read_text())
