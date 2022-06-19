@@ -278,11 +278,11 @@ def list_workspaces(directory, profile, profiles):
                 name = name[name.index('_') + 1:]
                 workspace = name[:name.rfind('_')]
                 file_type = name[name.rfind('_') + 1:name.index('.json')]
-                items.append(f'Workspace {workspace} {file_type}')
+                items.append(f"Workspace '{workspace}' {file_type}")
         elif profiles and entry.is_dir():
             # List profiles names
             profile = entry.name
-            items.append(f'Profile {profile}')
+            items.append(f"Profile '{profile}'")
     items = natsorted(items)
     for item in items:
         print(item)
