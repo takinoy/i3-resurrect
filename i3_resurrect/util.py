@@ -17,7 +17,7 @@ def filename_filter(filename):
     """
     Take a string and return a valid filename constructed from the string.
     """
-    blacklist = '/\\:*"<>|'
+    blacklist = '/\\:*\'"<>|'
     if filename is None:
         return filename
 
